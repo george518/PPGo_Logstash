@@ -25,6 +25,8 @@ type WrCh struct {
 
 var Cfg ini.File
 
+var Conf *config.ConfigGlobal
+
 func init() {
 	Cfg = config.Load()
 }
@@ -86,7 +88,5 @@ func main() {
 		WebPort:   Cfg.Section("").Key("web_port").String(),
 	}
 	m.Start(logProcess)
-
-	time.Sleep(10 * time.Second)
 
 }

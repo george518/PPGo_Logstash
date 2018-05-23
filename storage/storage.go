@@ -73,6 +73,9 @@ func (s *Storage) Save() {
 			continue
 		}
 
-		log.Println("influxdb success:", v)
+		if s.Env == "development" {
+			log.Println("influxdb success:", v)
+		}
+
 	}
 }

@@ -86,7 +86,7 @@ func (lp *LogProcess) Process() {
 		message.Scheme = reqSli[2]
 		message.Status = ret[6]
 
-		//message.Ip = ret[1]
+		message.Ip = ret[1]
 
 		upstreamTime, _ := strconv.ParseFloat(ret[11], 64)
 		requestTime, _ := strconv.ParseFloat(ret[12], 64)
