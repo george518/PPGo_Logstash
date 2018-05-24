@@ -8,25 +8,23 @@
 package storage
 
 import (
-	"github.com/george518/PPGo_Logstash/process"
 	"github.com/george518/PPGo_Logstash/types"
 	"github.com/influxdata/influxdb/client/v2"
 	"log"
 )
 
 type Storage struct {
-	Wc                                                chan *process.Message
-	DbUrl, DbPort, DbUser, DbPwd, DbName, DbPrecision string
-	DbTable                                           string
-	Env                                               string
+	Wc  chan *types.Message
+	Db  types.StorageDb
+	Env string
 }
 
 func (s *Storage) Save() {
 	// Create a new HTTPClient
 	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     s.DbUrl + ":" + s.DbPort,
-		Username: s.DbUser,
-		Password: s.DbPwd,
+		Addr:     s.Db.Url + ":" + s.Db.Port,
+		Username: s.Db.User,
+		Password: s.Db.Pwd,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -35,8 +33,8 @@ func (s *Storage) Save() {
 
 	// Create a new point batch
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  s.DbName,
-		Precision: s.DbPrecision,
+		Database:  s.Db.Name,
+		Precision: s.Db.Precision,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -58,10 +56,10 @@ func (s *Storage) Save() {
 			"BytesSent":    v.BytesSent,
 		}
 
-		pt, err := client.NewPoint(s.DbTable, tags, fields, v.TimeLocal)
+		pt, err := client.NewPoint(s.Db.Table, tags, fields, v.TimeLocal)
 		if err != nil {
 			types.TypeMonitorChan <- types.TypeErrNum
-			log.Println(err)
+			log.Println("NewPoint error:", err)
 			continue
 		}
 		bp.AddPoint(pt)
@@ -69,7 +67,7 @@ func (s *Storage) Save() {
 		// Write the batch
 		if err := c.Write(bp); err != nil {
 			types.TypeMonitorChan <- types.TypeErrNum
-			log.Println(err)
+			log.Println("InfluxDb write error:", err)
 			continue
 		}
 

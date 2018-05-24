@@ -13,6 +13,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -23,16 +24,16 @@ type LogData struct {
 
 func (ld *LogData) Read() {
 
-	//paths := strings.Split(ld.Path, ",")
-	//
-	//for _, path := range paths {
-	//	go ReadFile(path, ld.Rc)
-	//}
+	paths := strings.Split(ld.Path, ",")
 
-	ReadFile(ld.Path, ld.Rc)
+	for _, path := range paths {
+		go ReadFile(path, ld.Rc)
+	}
 }
 
 func ReadFile(path string, ch chan []byte) {
+
+	//TODO 如果文件资源变化，需要重新打开文件句柄
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)

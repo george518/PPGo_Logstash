@@ -24,7 +24,6 @@ type Monitor struct {
 }
 
 func (m *Monitor) Start(lp *process.LogProcess) {
-
 	go func() {
 		for n := range TypeMonitorChan {
 			switch n {
@@ -34,7 +33,6 @@ func (m *Monitor) Start(lp *process.LogProcess) {
 				m.Data.HandleLine += 1
 			}
 		}
-
 	}()
 
 	ticker := time.NewTicker(time.Second * 5)

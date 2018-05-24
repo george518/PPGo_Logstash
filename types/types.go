@@ -7,6 +7,8 @@
 *************************************************************/
 package types
 
+import "time"
+
 // 系统状态监控
 type SystemInfo struct {
 	HandleLine   int     `json:"handleLine"`   // 总处理日志行数
@@ -17,9 +19,45 @@ type SystemInfo struct {
 	ErrNum       int     `json:"errNum"`       // 错误数
 }
 
+//信息格式
+type Message struct {
+	TimeLocal                        time.Time
+	BytesSent                        int
+	Path, Method, Scheme, Status, Ip string
+	UpstreamTime, RequestTime        float64
+}
+
 const (
 	TypeHandleLine = 0
 	TypeErrNum     = 1
 )
 
 var TypeMonitorChan = make(chan int, 200)
+
+type Conf struct {
+	AppMode    string
+	WebPort    string
+	ReadNum    int
+	ProcessNum int
+	WriteNum   int
+	StorageDb  StorageDb
+	LogInfo    LogInfo
+}
+
+type StorageDb struct {
+	Type      string
+	Url       string
+	Port      string
+	User      string
+	Pwd       string
+	Name      string
+	Precision string
+	Table     string
+}
+
+type LogInfo struct {
+	Path    string
+	Regexp  string
+	Time    string
+	TimeLoc string
+}

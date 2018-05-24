@@ -17,37 +17,29 @@ import (
 	"time"
 )
 
-type Message struct {
-	TimeLocal                        time.Time
-	BytesSent                        int
-	Path, Method, Scheme, Status, Ip string
-	UpstreamTime, RequestTime        float64
-}
 type LogProcess struct {
-	Wc         chan *Message
-	Rc         chan []byte
-	Regexp     string
-	TimeLoc    string
-	TimeFormat string
+	Wc      chan *types.Message
+	Rc      chan []byte
+	LogInfo types.LogInfo
 }
 
 func (lp *LogProcess) Process() {
 
-	r := regexp.MustCompile(lp.Regexp)
+	r := regexp.MustCompile(lp.LogInfo.Regexp)
 
 	for v := range lp.Rc {
 
 		//fmt.Println(string(v))
 		ret := r.FindStringSubmatch(string(v))
-		loc, _ := time.LoadLocation(lp.TimeLoc)
+		loc, _ := time.LoadLocation(lp.LogInfo.TimeLoc)
 		if len(ret) != 13 {
 			types.TypeMonitorChan <- types.TypeErrNum
 			log.Println("FindStringSubmatch fail:", string(v))
 			continue
 		}
 
-		message := &Message{}
-		t, err := time.ParseInLocation(lp.TimeFormat, ret[4], loc)
+		message := &types.Message{}
+		t, err := time.ParseInLocation(lp.LogInfo.Time, ret[4], loc)
 		if err != nil {
 			types.TypeMonitorChan <- types.TypeErrNum
 			log.Println("ParseInLocation ", ret[4], err)

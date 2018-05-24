@@ -14,60 +14,35 @@ import (
 	"github.com/george518/PPGo_Logstash/process"
 	"github.com/george518/PPGo_Logstash/storage"
 	"github.com/george518/PPGo_Logstash/types"
-	"github.com/go-ini/ini"
 	"time"
 )
 
-type WrCh struct {
-	Wc chan *process.Message
-	Rc chan []byte
-}
-
-var Cfg ini.File
-
-var Conf *config.ConfigGlobal
-
-func init() {
-	Cfg = config.Load()
-}
-
 func main() {
 
-	wc := make(chan *process.Message, 200)
+	wc := make(chan *types.Message, 200)
 	rc := make(chan []byte, 200)
+	Conf := config.LoadConfig()
 
-	wrch := WrCh{
-		Wc: wc,
-		Rc: rc,
-	}
 	logData := &logdig.LogData{
-		Rc:   wrch.Rc,
-		Path: Cfg.Section("log_info").Key("log_path").String(),
+		Rc:   rc,
+		Path: Conf.LogInfo.Path,
 	}
 
 	logProcess := &process.LogProcess{
-		Wc:         wrch.Wc,
-		Rc:         wrch.Rc,
-		TimeLoc:    Cfg.Section("").Key("time_loc").String(),
-		Regexp:     Cfg.Section("log_info").Key("log_regexp").String(),
-		TimeFormat: Cfg.Section("log_info").Key("log_time").String(),
+		Wc:      wc,
+		Rc:      rc,
+		LogInfo: Conf.LogInfo,
 	}
 
 	storage := &storage.Storage{
-		Wc:          wrch.Wc,
-		DbUrl:       Cfg.Section("storage").Key("db_url").String(),
-		DbPort:      Cfg.Section("storage").Key("db_port").String(),
-		DbUser:      Cfg.Section("storage").Key("db_user").String(),
-		DbPwd:       Cfg.Section("storage").Key("db_pwd").String(),
-		DbName:      Cfg.Section("storage").Key("db_name").String(),
-		DbPrecision: Cfg.Section("storage").Key("db_precision").String(),
-		DbTable:     Cfg.Section("storage").Key("db_table").String(),
-		Env:         Cfg.Section("").Key("app_mode").String(),
+		Wc:  wc,
+		Db:  Conf.StorageDb,
+		Env: Conf.AppMode,
 	}
 
-	readNum, _ := Cfg.Section("").Key("read_num").Int()
-	procNum, _ := Cfg.Section("").Key("process_num").Int()
-	writeNum, _ := Cfg.Section("").Key("write_num").Int()
+	readNum := Conf.ReadNum
+	procNum := Conf.ProcessNum
+	writeNum := Conf.WriteNum
 
 	for i := 0; i < readNum; i++ {
 		go logData.Read()
@@ -85,7 +60,7 @@ func main() {
 	m := &monitor.Monitor{
 		StartTime: time.Now(),
 		Data:      types.SystemInfo{},
-		WebPort:   Cfg.Section("").Key("web_port").String(),
+		WebPort:   Conf.WebPort,
 	}
 	m.Start(logProcess)
 
