@@ -8,9 +8,10 @@
 package storage
 
 import (
+	"log"
+
 	"github.com/george518/PPGo_Logstash/types"
 	"github.com/influxdata/influxdb/client/v2"
-	"log"
 )
 
 type Storage struct {
@@ -19,28 +20,13 @@ type Storage struct {
 	Env string
 }
 
-func (s *Storage) Save() {
-	// Create a new HTTPClient
-	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     s.Db.Url + ":" + s.Db.Port,
-		Username: s.Db.User,
-		Password: s.Db.Pwd,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer c.Close()
-
-	// Create a new point batch
-	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  s.Db.Name,
-		Precision: s.Db.Precision,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+func (s *Storage) Save(pools channelPool) {
 
 	for v := range s.Wc {
+		conn, err := pools.Get()
+		if err != nil {
+			log.Fatal("get conn error")
+		}
 		// Create a point and add to batch
 		tags := map[string]string{
 			"Path":   v.Path,
@@ -62,10 +48,11 @@ func (s *Storage) Save() {
 			log.Println("NewPoint error:", err)
 			continue
 		}
-		bp.AddPoint(pt)
+		conn.bp.AddPoint(pt)
 
 		// Write the batch
-		if err := c.Write(bp); err != nil {
+
+		if err := conn.cli.Write(conn.bp); err != nil {
 			types.TypeMonitorChan <- types.TypeErrNum
 			log.Println("InfluxDb write error:", err)
 			continue
@@ -73,7 +60,8 @@ func (s *Storage) Save() {
 
 		if s.Env == "development" {
 			log.Println("influxdb success:", v)
+			//log.Println(conn)
 		}
-
+		pools.Put(*conn)
 	}
 }
