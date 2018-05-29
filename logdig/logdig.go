@@ -32,9 +32,9 @@ func (ld *LogData) Read() {
 }
 
 func ReadFile(path string, ch chan []byte) {
-
 	//TODO 如果文件资源变化，需要重新打开文件句柄
 	f, err := os.Open(path)
+
 	if err != nil {
 		log.Fatal(err)
 		return
