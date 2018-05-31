@@ -172,9 +172,9 @@ func (c *channelPool) Len() int {
 func DbFactory() (ifd InfluxDb, err error) {
 	s := config.LoadConfig()
 	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     s.StorageDb.Url + ":" + s.StorageDb.Port,
-		Username: s.StorageDb.User,
-		Password: s.StorageDb.Pwd,
+		Addr:     s.InfluxDb.Url + ":" + s.InfluxDb.Port,
+		Username: s.InfluxDb.User,
+		Password: s.InfluxDb.Pwd,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -183,8 +183,8 @@ func DbFactory() (ifd InfluxDb, err error) {
 
 	// Create a new point batch
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  s.StorageDb.Name,
-		Precision: s.StorageDb.Precision,
+		Database:  s.InfluxDb.Name,
+		Precision: s.InfluxDb.Precision,
 	})
 	if err != nil {
 		log.Fatal(err)

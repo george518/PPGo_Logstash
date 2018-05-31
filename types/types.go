@@ -35,29 +35,30 @@ const (
 var TypeMonitorChan = make(chan int, 200)
 
 type Conf struct {
-	AppMode    string
-	WebPort    string
-	ReadNum    int
-	ProcessNum int
-	WriteNum   int
-	StorageDb  StorageDb
-	LogInfo    LogInfo
+	AppMode     string
+	WebPort     string
+	ReadNum     int
+	ProcessNum  int
+	WriteNum    int
+	StorageType string
+	LogType     string
+	InfluxDb    InfluxDb
+	NginxLog    NginxLog
 }
 
-type StorageDb struct {
-	Type      string
+type InfluxDb struct {
 	Url       string
 	Port      string
 	User      string
 	Pwd       string
 	Name      string
 	Precision string
-	Table     string
 }
 
-type LogInfo struct {
+type NginxLog struct {
 	Path    string
 	Regexp  string
 	Time    string
 	TimeLoc string
+	Table   string
 }

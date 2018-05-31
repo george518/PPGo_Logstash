@@ -20,7 +20,7 @@ import (
 type LogProcess struct {
 	Wc      chan *types.Message
 	Rc      chan []byte
-	LogInfo types.LogInfo
+	LogInfo types.NginxLog
 }
 
 func (lp *LogProcess) Process() {

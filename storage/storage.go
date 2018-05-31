@@ -15,9 +15,9 @@ import (
 )
 
 type Storage struct {
-	Wc  chan *types.Message
-	Db  types.StorageDb
-	Env string
+	Wc    chan *types.Message
+	Table string
+	Env   string
 }
 
 func (s *Storage) Save(pools channelPool) {
@@ -42,7 +42,7 @@ func (s *Storage) Save(pools channelPool) {
 			"BytesSent":    v.BytesSent,
 		}
 
-		pt, err := client.NewPoint(s.Db.Table, tags, fields, v.TimeLocal)
+		pt, err := client.NewPoint(s.Table, tags, fields, v.TimeLocal)
 		if err != nil {
 			types.TypeMonitorChan <- types.TypeErrNum
 			log.Println("NewPoint error:", err)

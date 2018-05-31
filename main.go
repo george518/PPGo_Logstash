@@ -52,19 +52,19 @@ func main() {
 
 	logData := &logdig.LogData{
 		Rc:   rc,
-		Path: Conf.LogInfo.Path,
+		Path: Conf.NginxLog.Path,
 	}
 
 	logProcess := &process.LogProcess{
 		Wc:      wc,
 		Rc:      rc,
-		LogInfo: Conf.LogInfo,
+		LogInfo: Conf.NginxLog,
 	}
 
 	storage := &Storage{
-		Wc:  wc,
-		Db:  Conf.StorageDb,
-		Env: Conf.AppMode,
+		Wc:    wc,
+		Table: Conf.NginxLog.Table,
+		Env:   Conf.AppMode,
 	}
 
 	readNum := Conf.ReadNum

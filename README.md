@@ -28,15 +28,19 @@ demo界面<br/>
 ![github](https://github.com/george518/PPGo_Logstash/blob/master/testData/images/demo.png?raw=true "github")
 <br/><br/>
 
-<br/><br/>
-
-
 
 安装方法
 ----
+
 ppgo_logstash安装
 
 influxDb安装
+
+#log format
+#      log_format  access  '$remote_addr - $remote_user [$time_local] "$request" '
+#                          '$status $body_bytes_sent "$http_referer" '
+#                         '"$http_user_agent" "$http_x_forwarded_for" '
+#                          '$upstream_response_time $request_time';
 
 
 联系我
