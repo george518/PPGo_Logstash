@@ -20,12 +20,15 @@ func main() {
 	127.0.0.1 - - [17/May/2018:13:30:01 +0800] "GET /api/v0/product HTTP/1.1" 200 119 "-" "-" - "0.065"
 	*/
 	const path = "./access.log"
+	const path2 = "./access2.log"
 
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, os.ModePerm)
+	file2, err := os.OpenFile(path2, os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		panic(fmt.Sprintf("Open file err: %s", err.Error()))
 	}
 	defer file.Close()
+	defer file2.Close()
 
 	for {
 
@@ -58,10 +61,11 @@ func main() {
 				upstreamResponseTime = requestTime + 0.001
 			}
 			line := fmt.Sprintf("127.0.0.1 - - [%s +0800] \"%s %s HTTP/1.0\" %d %d \"-\" \"KeepAliveClient\" \"-\" %.3f %.3f\n", dateTime, method, path, code, bytesSend, upstreamResponseTime, requestTime)
-
+			line2 := fmt.Sprintf("127.0.0.2 - - [%s +0800] \"%s %s HTTP/1.0\" %d %d \"-\" \"KeepAliveClient\" \"-\" %.3f %.3f\n", dateTime, method, path, code, bytesSend, upstreamResponseTime, requestTime)
 			_, err := file.Write([]byte(line))
-
+			_, err = file2.Write([]byte(line2))
 			fmt.Println(line)
+			fmt.Println(line2)
 			if err != nil {
 				log.Println("writeToFile error:", err)
 			}

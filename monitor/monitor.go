@@ -12,6 +12,7 @@ import (
 	"github.com/george518/PPGo_Logstash/process"
 	. "github.com/george518/PPGo_Logstash/types"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -55,7 +56,10 @@ func (m *Monitor) Start(lp *process.LogProcess) {
 			m.Data.Tps = float64(m.TpsSli[1]-m.TpsSli[0]) / 5
 		}
 
-		ret, _ := json.MarshalIndent(m.Data, "", "\t")
+		ret, err := json.MarshalIndent(m.Data, "", "\t")
+		if err != nil {
+			log.Println(err)
+		}
 		io.WriteString(writer, string(ret))
 	})
 

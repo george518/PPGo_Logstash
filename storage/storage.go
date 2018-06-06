@@ -15,7 +15,7 @@ import (
 )
 
 type Storage struct {
-	Wc    chan *types.Message
+	Wc    chan *types.LogMessage
 	Table string
 	Env   string
 }
@@ -28,20 +28,9 @@ func (s *Storage) Save(pools channelPool) {
 			log.Fatal("get conn error")
 		}
 		// Create a point and add to batch
-		tags := map[string]string{
-			"Path":   v.Path,
-			"Method": v.Method,
-			"Schema": v.Scheme,
-			"Status": v.Status,
-			"Ip":     v.Ip,
-		}
+		tags := v.Tags
 		//tags := map[string]string{"cpu": "cpu-total"}
-		fields := map[string]interface{}{
-			"UpstreamTime": v.UpstreamTime,
-			"RequestTime":  v.RequestTime,
-			"BytesSent":    v.BytesSent,
-		}
-
+		fields := v.Fileds
 		pt, err := client.NewPoint(s.Table, tags, fields, v.TimeLocal)
 		if err != nil {
 			types.TypeMonitorChan <- types.TypeErrNum

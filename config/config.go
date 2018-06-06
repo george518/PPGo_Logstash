@@ -8,18 +8,43 @@
 package config
 
 import (
-	"github.com/george518/PPGo_Logstash/types"
 	"github.com/go-ini/ini"
 	"log"
 )
 
-func LoadConfig() *types.Conf {
+//func LoadConfig() *types.Conf {
+//	cfg, err := ini.Load("./config/conf.ini")
+//	conf := new(types.Conf)
+//	err = cfg.MapTo(conf)
+//
+//	if err != nil {
+//		log.Fatalf("Fail to read file: %v", err)
+//	}
+//	return conf
+//}
+
+type Conf struct {
+	Global  *ini.Section
+	Storage *ini.Section
+	LogType *ini.Section
+}
+
+func LoadConfig() *Conf {
 	cfg, err := ini.Load("./config/conf.ini")
-	conf := new(types.Conf)
-	err = cfg.MapTo(conf)
 
 	if err != nil {
-		log.Fatalf("Fail to read file: %v", err)
+		log.Fatalf("Fail to read config file:%v", err)
 	}
-	return conf
+
+	globalConf := cfg.Section("")
+	storageType := globalConf.Key("StorageType").String()
+	logType := globalConf.Key("LogType").String()
+	storageConf := cfg.Section(storageType)
+	logConf := cfg.Section(logType)
+
+	return &Conf{
+		Global:  globalConf,
+		Storage: storageConf,
+		LogType: logConf,
+	}
 }

@@ -7,24 +7,24 @@
 *************************************************************/
 package types
 
-import "time"
+import (
+	"time"
+)
 
 // 系统状态监控
 type SystemInfo struct {
 	HandleLine   int     `json:"handleLine"`   // 总处理日志行数
 	Tps          float64 `json:"tps"`          // 系统吞出量
 	ReadChanLen  int     `json:"readChanLen"`  // read channel 长度
-	WriteChanLen int     `json:"writeChanLen"` // write channel 长度
+	WriteChanLen int     `json:"writeChanLen"` // write channel 长度0
 	RunTime      string  `json:"runTime"`      // 运行总时间
 	ErrNum       int     `json:"errNum"`       // 错误数
 }
 
-//信息格式
-type Message struct {
-	TimeLocal                        time.Time
-	BytesSent                        int
-	Path, Method, Scheme, Status, Ip string
-	UpstreamTime, RequestTime        float64
+type LogMessage struct {
+	TimeLocal time.Time
+	Tags      map[string]string
+	Fileds    map[string]interface{}
 }
 
 const (
@@ -34,31 +34,6 @@ const (
 
 var TypeMonitorChan = make(chan int, 200)
 
-type Conf struct {
-	AppMode     string
-	WebPort     string
-	ReadNum     int
-	ProcessNum  int
-	WriteNum    int
-	StorageType string
-	LogType     string
-	InfluxDb    InfluxDb
-	NginxLog    NginxLog
-}
-
-type InfluxDb struct {
-	Url       string
-	Port      string
-	User      string
-	Pwd       string
-	Name      string
-	Precision string
-}
-
-type NginxLog struct {
-	Path    string
-	Regexp  string
-	Time    string
-	TimeLoc string
-	Table   string
+func test() string {
+	return "123"
 }

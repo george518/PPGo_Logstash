@@ -10,6 +10,7 @@ package logdig
 import (
 	"bufio"
 	"github.com/george518/PPGo_Logstash/types"
+	"github.com/go-ini/ini"
 	"io"
 	"log"
 	"os"
@@ -19,12 +20,12 @@ import (
 
 type LogData struct {
 	Rc   chan []byte
-	Path string
+	Conf *ini.Section
 }
 
 func (ld *LogData) Read() {
 
-	paths := strings.Split(ld.Path, ",")
+	paths := strings.Split(ld.Conf.Key("Path").String(), ",")
 
 	for _, path := range paths {
 		go ReadFile(path, ld.Rc)
@@ -45,7 +46,6 @@ func ReadFile(path string, ch chan []byte) {
 	rd := bufio.NewReader(f)
 	for {
 		line, err := rd.ReadBytes('\n')
-
 		if err == io.EOF {
 			time.Sleep(500 * time.Microsecond)
 			continue

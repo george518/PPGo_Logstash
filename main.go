@@ -8,22 +8,36 @@
 package main
 
 import (
-	"log"
-	"time"
-
 	"github.com/george518/PPGo_Logstash/config"
 	"github.com/george518/PPGo_Logstash/logdig"
 	"github.com/george518/PPGo_Logstash/monitor"
 	"github.com/george518/PPGo_Logstash/process"
 	. "github.com/george518/PPGo_Logstash/storage"
 	"github.com/george518/PPGo_Logstash/types"
+	"log"
+	"time"
 )
 
 func main() {
 
+	wc := make(chan *types.LogMessage, 200)
+	rc := make(chan []byte, 200)
+
+	//config
+	Conf := config.LoadConfig()
+
+	//db pool
+	InitialCap, err := Conf.Storage.Key("InitialCap").Int()
+	if err != nil {
+		InitialCap = 1
+	}
+	MaxCap, err := Conf.Storage.Key("MaxCap").Int()
+	if err != nil {
+		MaxCap = 3
+	}
 	var poolConfig = &PoolConfig{
-		InitialCap: 1,
-		MaxCap:     3,
+		InitialCap: InitialCap,
+		MaxCap:     MaxCap,
 		Factory:    DbFactory,
 		Close:      DbClose,
 		//链接最大空闲时间，超过该时间的链接 将会关闭，可避免空闲时链接EOF，自动失效的问题
@@ -35,41 +49,26 @@ func main() {
 		log.Fatal("create db pool error")
 	}
 
-	//for i := 0; i < 10; i++ {
-	//	conn, err := dbpool.Get()
-	//	if err != nil {
-	//		log.Fatal("get conn error")
-	//	}
-	//	fmt.Println(dbpool.Len())
-	//	fmt.Println(conn)
-	//	dbpool.Put(*conn)
-	//	time.Sleep(1 * time.Second)
-	//}
-
-	wc := make(chan *types.Message, 200)
-	rc := make(chan []byte, 200)
-	Conf := config.LoadConfig()
-
 	logData := &logdig.LogData{
 		Rc:   rc,
-		Path: Conf.NginxLog.Path,
+		Conf: Conf.LogType,
 	}
 
 	logProcess := &process.LogProcess{
 		Wc:      wc,
 		Rc:      rc,
-		LogInfo: Conf.NginxLog,
+		LogInfo: Conf.LogType,
 	}
 
 	storage := &Storage{
 		Wc:    wc,
-		Table: Conf.NginxLog.Table,
-		Env:   Conf.AppMode,
+		Table: Conf.LogType.Key("Table").String(),
+		Env:   Conf.Global.Key("AppMode").String(),
 	}
 
-	readNum := Conf.ReadNum
-	procNum := Conf.ProcessNum
-	writeNum := Conf.WriteNum
+	readNum, _ := Conf.Global.Key("ReadNum").Int()
+	procNum, _ := Conf.Global.Key("ProcessNum").Int()
+	writeNum, _ := Conf.Global.Key("WriteNum").Int()
 
 	for i := 0; i < readNum; i++ {
 		go logData.Read()
@@ -87,7 +86,7 @@ func main() {
 	m := &monitor.Monitor{
 		StartTime: time.Now(),
 		Data:      types.SystemInfo{},
-		WebPort:   Conf.WebPort,
+		WebPort:   Conf.LogType.Key("WebPort").String(),
 	}
 	m.Start(logProcess)
 
