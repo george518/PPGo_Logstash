@@ -8,6 +8,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/george518/PPGo_Logstash/config"
 	"github.com/george518/PPGo_Logstash/logdig"
 	"github.com/george518/PPGo_Logstash/monitor"
@@ -18,13 +19,14 @@ import (
 	"time"
 )
 
+var config_file *string = flag.String("c", "configfile", "Use -c <config_file_path>")
+
 func main() {
+	flag.Parse()
+	Conf := config.LoadConfig(*config_file)
 
 	wc := make(chan *types.LogMessage, 200)
 	rc := make(chan []byte, 200)
-
-	//config
-	Conf := config.LoadConfig()
 
 	//db pool
 	InitialCap, err := Conf.Storage.Key("InitialCap").Int()
@@ -42,6 +44,8 @@ func main() {
 		Close:      DbClose,
 		//链接最大空闲时间，超过该时间的链接 将会关闭，可避免空闲时链接EOF，自动失效的问题
 		IdleTimeout: 5 * time.Second,
+		//数据库链接
+		Conf: Conf.Storage,
 	}
 
 	dbpool, err := NewChannelPool(poolConfig)
@@ -86,7 +90,7 @@ func main() {
 	m := &monitor.Monitor{
 		StartTime: time.Now(),
 		Data:      types.SystemInfo{},
-		WebPort:   Conf.LogType.Key("WebPort").String(),
+		WebPort:   Conf.Global.Key("WebPort").String(),
 	}
 	m.Start(logProcess)
 

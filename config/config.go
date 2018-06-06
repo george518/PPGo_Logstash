@@ -29,8 +29,8 @@ type Conf struct {
 	LogType *ini.Section
 }
 
-func LoadConfig() *Conf {
-	cfg, err := ini.Load("./config/conf.ini")
+func LoadConfig(config_file string) *Conf {
+	cfg, err := ini.Load(config_file)
 
 	if err != nil {
 		log.Fatalf("Fail to read config file:%v", err)
