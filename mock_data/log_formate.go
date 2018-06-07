@@ -20,20 +20,22 @@ import (
 
 func main() {
 
-	Tags := `{"Path":{"id":"6","func":"url,trim_right_num"},"Method":{"id":"5","func":"trim_left_1"},"Schema":{"id":"7","func":"trim_right_1"},"Status":{"id":"8","func":""},"Ip":{"id":"0","func":""}}`
+	Tags := `{"Path":{"id":"4","func":"split_str,url,trim_right_num","c_id":"1"},"Method":{"id":"4","func":"split_str,trim_left_1","c_id":"0"},"Schema":{"id":"4","func":"split_str,trim_right_1","c_id":"-1"},"Status":{"id":"5","func":""},"Ip":{"id":"0","func":""}}`
 	Tag := make(map[string]interface{})
 	json.Unmarshal([]byte(Tags), &Tag)
 
-	Fields := `{"UpstreamTime":{"id":"13","func":"float64"},"RequestTime":{"id":"14","func":"float64"},"BytesSent":{"id":"9","func":"int"}}`
+	Fields := `{"UpstreamTime":{"id":"10","func":"float64"},"RequestTime":{"id":"11","func":"float64"},"BytesSent":{"id":"6","func":"int"}}`
 	Field := make(map[string]interface{})
 	json.Unmarshal([]byte(Fields), &Field)
 
-	time_key := 3
-	time_format := `02/Jan/2006:15:04:05`
+	time_format := `02/Jan/2006:15:04:05 +0800`
 	time_loc := `Asia/Shanghai`
 
-	str := `127.0.0.1 - - [31/May/2018:09:43:10 +0800] "GET /api/v0/spu/12131212 HTTP/1.0" 200 755 "-" "KeepAliveClient" "-" 0.568 0.568`
-	Delimiter := ` `
+	Timesf := `{"id":"3","func":"trim_left_1,trim_right_1"}`
+
+	//str := `127.0.0.1||-||-||[31/May/2018:09:43:10 +0800]||"GET /api/v0/spu/12131212&time=2017-12-18 12:00:00&end_time=2017-12-30 12:00:00&ts=12  HTTP/1.0"||200||755||"-"||"KeepAliveClient"||"-"||0.568||0.568`
+	str := `140.207.52.210||-||-||[07/Jun/2018:14:34:25 +0800]||"GET /api/v0/order?sign=c96be7781f8579df8f52edb670e0c316&page_size=50&ts=1528353264&end_time=2018-06-07 14:34:24&start_time=2018-06-07 14:05:24&method=GET&app_key=0137&page_no=1 HTTP/1.1"||200||72||"-"||"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)"||"-"||0.169||0.169`
+	Delimiter := `||`
 	ret := strings.Split(str, Delimiter)
 
 	for ks, vs := range ret {
@@ -75,6 +77,9 @@ func main() {
 
 		for _, vf := range fs {
 			switch vf {
+			case "split_str":
+				cid, _ := strconv.Atoi(iv["c_id"].(string))
+				tags[k] = split_str(tags[k], " ", cid)
 			case "url":
 				tags[k] = url_format(tags[k])
 			case "trim_right_num":
@@ -135,11 +140,40 @@ func main() {
 
 	loc, _ := time.LoadLocation(time_loc)
 
-	ret[time_key] = trim_left_1(ret[time_key])
-	fmt.Println(ret[time_key])
-	t, err := time.ParseInLocation(time_format, ret[time_key], loc)
+	//处理时间
+	Times := Timesf
+	Time := make(map[string]string)
+	json.Unmarshal([]byte(Times), &Time)
+
+	id := -1
+	if idstr, ok := Time["id"]; ok {
+		id, _ = strconv.Atoi(idstr)
+	} else {
+		log.Println("time strconv.Atoi id is not exist")
+	}
+
+	if id == -1 {
+		log.Println("time id illegal:", id)
+
+	}
+	timeStr := ret[id]
+
+	if funcstr, ok := Time["func"]; ok {
+		fs := strings.Split(funcstr, ",")
+		for _, vf := range fs {
+			switch vf {
+			case "trim_left_1":
+				timeStr = trim_left_1(timeStr)
+			case "trim_right_1":
+				timeStr = trim_right_1(timeStr)
+			}
+		}
+
+	}
+
+	t, err := time.ParseInLocation(time_format, timeStr, loc)
 	if err != nil {
-		fmt.Println("error time format:", ret[time_key])
+		fmt.Println("error time format:", timeStr)
 	}
 
 	//fields := map[string]interface{}{
@@ -157,6 +191,15 @@ func main() {
 
 func replace_str(str string) string {
 	return strings.Replace(str, "/", "|", 1)
+}
+
+func split_str(str, delimiter string, id int) string {
+	arr := strings.Split(str, delimiter)
+	fmt.Println(arr)
+	if id == -1 {
+		id = len(arr) - 1
+	}
+	return arr[id]
 }
 
 func url_format(url_str string) string {

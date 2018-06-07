@@ -60,8 +60,8 @@ func main() {
 			if now.Unix()%10 == 1 {
 				upstreamResponseTime = requestTime + 0.001
 			}
-			line := fmt.Sprintf("127.0.0.1 - - [%s +0800] \"%s %s HTTP/1.0\" %d %d \"-\" \"KeepAliveClient\" \"-\" %.3f %.3f\n", dateTime, method, path, code, bytesSend, upstreamResponseTime, requestTime)
-			line2 := fmt.Sprintf("127.0.0.2 - - [%s +0800] \"%s %s HTTP/1.0\" %d %d \"-\" \"KeepAliveClient\" \"-\" %.3f %.3f\n", dateTime, method, path, code, bytesSend, upstreamResponseTime, requestTime)
+			line := fmt.Sprintf("127.0.0.1||-||-||[%s +0800]||\"%s %s HTTP/1.0\"||%d||%d||\"-\"||\"KeepAliveClient\"||\"-\"||%.3f||%.3f\n", dateTime, method, path, code, bytesSend, upstreamResponseTime, requestTime)
+			line2 := fmt.Sprintf("127.0.0.2||-||-||[%s +0800]||\"%s %s HTTP/1.0\"||%d||%d||\"-\"||\"KeepAliveClient\"||\"-\"||%.3f||%.3f\n", dateTime, method, path, code, bytesSend, upstreamResponseTime, requestTime)
 			_, err := file.Write([]byte(line))
 			_, err = file2.Write([]byte(line2))
 			fmt.Println(line)

@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-var config_file *string = flag.String("c", "configfile", "Use -c <config_file_path>")
+var config_file *string = flag.String("c", "./config/conf.ini", "Use -c <config_file_path>")
 
 func main() {
 	flag.Parse()

@@ -89,9 +89,11 @@ func nginx_process(lp *LogProcess) {
 
 			tags[k] = ret[id]
 			fs := strings.Split(f, ",")
-
 			for _, vf := range fs {
 				switch vf {
+				case "split_str":
+					cid, _ := strconv.Atoi(iv["c_id"].(string))
+					tags[k] = split_str(tags[k], " ", cid)
 				case "url":
 					tags[k] = url_format(tags[k])
 				case "trim_right_num":
@@ -182,19 +184,22 @@ func nginx_process(lp *LogProcess) {
 		}
 		timeStr := ret[id]
 		if funcstr, ok := Time["func"]; ok {
-			if funcstr != "" {
-				switch funcstr {
+			fs := strings.Split(funcstr, ",")
+			for _, vf := range fs {
+				switch vf {
 				case "trim_left_1":
 					timeStr = trim_left_1(timeStr)
 				case "trim_right_1":
 					timeStr = trim_right_1(timeStr)
 				}
 			}
-		}
 
+		}
 		t, err := time.ParseInLocation(lp.LogInfo.Key("TimeFormat").String(), timeStr, loc)
+
+		log.Println(timeStr)
 		if err != nil {
-			log.Println(" time is error")
+			log.Println(" time is error", err)
 			continue
 		}
 
@@ -206,6 +211,14 @@ func nginx_process(lp *LogProcess) {
 
 		lp.Wc <- logmessage
 	}
+}
+
+func split_str(str, delimiter string, id int) string {
+	arr := strings.Split(str, delimiter)
+	if id == -1 {
+		id = len(arr) - 1
+	}
+	return arr[id]
 }
 
 func url_format(url_str string) string {
