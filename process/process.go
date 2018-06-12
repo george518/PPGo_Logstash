@@ -47,7 +47,7 @@ func nginx_process(lp *LogProcess) {
 			delimiter = " "
 		}
 		ret := strings.Split(string(v), delimiter)
-
+		len := len(ret)
 		//处理Tags
 		Tags := lp.LogInfo.Key("Tags").String()
 		Tag := make(map[string]interface{})
@@ -77,6 +77,11 @@ func nginx_process(lp *LogProcess) {
 
 			if id == -1 {
 				log.Println("id illegal -1")
+				continue
+			}
+
+			if id >= len {
+				log.Println("id out of range", ret)
 				continue
 			}
 
@@ -142,6 +147,11 @@ func nginx_process(lp *LogProcess) {
 				continue
 			}
 
+			if id >= len {
+				log.Println("id out of range", ret)
+				continue
+			}
+
 			f := iv["func"].(string)
 
 			if f == "" {
@@ -182,6 +192,11 @@ func nginx_process(lp *LogProcess) {
 			log.Println("time id illegal:", id)
 			continue
 		}
+
+		if id >= len {
+			log.Println("id out of range", ret)
+			continue
+		}
 		timeStr := ret[id]
 		if funcstr, ok := Time["func"]; ok {
 			fs := strings.Split(funcstr, ",")
@@ -218,7 +233,10 @@ func split_str(str, delimiter string, id int) string {
 	if id == -1 {
 		id = len(arr) - 1
 	}
-	return arr[id]
+	if id < len(arr) {
+		return arr[id]
+	}
+	return str
 }
 
 func url_format(url_str string) string {

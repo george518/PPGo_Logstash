@@ -19,6 +19,21 @@ import (
 )
 
 func main() {
+	str := `GET /api/v0/order?sign=c96be7781f8579df8f52edb670e0c316&page_size=50&ts=1528353264&end_time=2018-06-07 14:34:24&start_time=2018-06-07 14:05:24&method=GET&app_key=0137&page_no=1 HTTP/1.1`
+	s := split_str(str, " ", -1)
+	log.Println(s)
+
+	arr := []int{1, 2, 3}
+
+	if t, ok := arr[3]; ok {
+		log.Println("no")
+	} else {
+		log.Println("yes")
+	}
+
+}
+
+func parse() {
 
 	Tags := `{"Path":{"id":"4","func":"split_str,url,trim_right_num","c_id":"1"},"Method":{"id":"4","func":"split_str,trim_left_1","c_id":"0"},"Schema":{"id":"4","func":"split_str,trim_right_1","c_id":"-1"},"Status":{"id":"5","func":""},"Ip":{"id":"0","func":""}}`
 	Tag := make(map[string]interface{})
@@ -195,11 +210,13 @@ func replace_str(str string) string {
 
 func split_str(str, delimiter string, id int) string {
 	arr := strings.Split(str, delimiter)
-	fmt.Println(arr)
 	if id == -1 {
 		id = len(arr) - 1
 	}
-	return arr[id]
+	if id < len(arr) {
+		return arr[id]
+	}
+	return str
 }
 
 func url_format(url_str string) string {
