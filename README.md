@@ -27,7 +27,7 @@ nginx日志:
 效果展示
 ----
 demo界面<br/>
-![github](https://github.com/george518/PPGo_Logstash/blob/master/testData/images/demo.png?raw=true "github")
+![github](https://github.com/george518/PPGo_Logstash/blob/master/mock_data/images/demo.png?raw=true "github")
 <br/><br/>
 
 
