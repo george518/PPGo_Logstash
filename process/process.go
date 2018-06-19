@@ -212,7 +212,6 @@ func nginx_process(lp *LogProcess) {
 		}
 		t, err := time.ParseInLocation(lp.LogInfo.Key("TimeFormat").String(), timeStr, loc)
 
-		log.Println(timeStr)
 		if err != nil {
 			log.Println(" time is error", err)
 			continue
