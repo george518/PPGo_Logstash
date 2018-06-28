@@ -71,10 +71,10 @@ func main() {
 			}
 		}
 
-		time.Sleep(4 * time.Second)
-		//time.Sleep(time.Millisecond * 200)
+		//time.Sleep(4 * time.Second)
+		//time.Sleep(time.Millisecond * 50)
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
 

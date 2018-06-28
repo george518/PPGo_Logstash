@@ -9,89 +9,37 @@ package main
 
 import (
 	"flag"
-	"github.com/george518/PPGo_Logstash/config"
-	"github.com/george518/PPGo_Logstash/logdig"
-	"github.com/george518/PPGo_Logstash/monitor"
-	"github.com/george518/PPGo_Logstash/process"
-	. "github.com/george518/PPGo_Logstash/storage"
+	"github.com/george518/PPGo_Logstash/logstash"
 	"github.com/george518/PPGo_Logstash/types"
 	"log"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-var config_file *string = flag.String("c", "./config/conf.ini", "Use -c <config_file_path>")
+var configFile *string = flag.String("c", "./config/conf.ini", "Use -c <config_file_path>")
 
 func main() {
-	flag.Parse()
-	Conf := config.LoadConfig(*config_file)
 
-	wc := make(chan *types.LogMessage, 200)
-	rc := make(chan []byte, 200)
+	//创建监听退出chan
+	c := make(chan os.Signal)
+	//监听指定信号 ctrl+c kill
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
 
-	//db pool
-	InitialCap, err := Conf.Storage.Key("InitialCap").Int()
-	if err != nil {
-		InitialCap = 1
-	}
-	MaxCap, err := Conf.Storage.Key("MaxCap").Int()
-	if err != nil {
-		MaxCap = 3
-	}
-	var poolConfig = &PoolConfig{
-		InitialCap: InitialCap,
-		MaxCap:     MaxCap,
-		Factory:    DbFactory,
-		Close:      DbClose,
-		//链接最大空闲时间，超过该时间的链接 将会关闭，可避免空闲时链接EOF，自动失效的问题
-		IdleTimeout: 5 * time.Second,
-		//数据库链接
-		Conf: Conf.Storage,
-	}
+	go func() {
+		for s := range c {
+			switch s {
+			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2:
+				log.Println(" Ready to quit ", s)
+				types.ExitReadChan <- 1
+			default:
+				log.Println("other", s)
+			}
+		}
+	}()
 
-	dbpool, err := NewChannelPool(poolConfig)
-	if err != nil {
-		log.Fatal("create db pool error")
-	}
-
-	logData := &logdig.LogData{
-		Rc:   rc,
-		Conf: Conf.LogType,
-	}
-
-	logProcess := &process.LogProcess{
-		Wc:      wc,
-		Rc:      rc,
-		LogInfo: Conf.LogType,
-	}
-
-	storage := &Storage{
-		Wc:    wc,
-		Table: Conf.LogType.Key("Table").String(),
-		Env:   Conf.Global.Key("AppMode").String(),
-	}
-
-	readNum, _ := Conf.Global.Key("ReadNum").Int()
-	procNum, _ := Conf.Global.Key("ProcessNum").Int()
-	writeNum, _ := Conf.Global.Key("WriteNum").Int()
-
-	for i := 0; i < readNum; i++ {
-		go logData.Read()
-	}
-
-	//log.Println(storage)
-	for i := 0; i < procNum; i++ {
-		go logProcess.Process()
-	}
-
-	for i := 0; i < writeNum; i++ {
-		go storage.Save(*dbpool)
-	}
-
-	m := &monitor.Monitor{
-		StartTime: time.Now(),
-		Data:      types.SystemInfo{},
-		WebPort:   Conf.Global.Key("WebPort").String(),
-	}
-	m.Start(logProcess)
+	log.Println(" ppgo_logstash is starting...")
+	//开始愉快的干活啦
+	logstash.Run(*configFile, types.ExitReadChan)
 
 }

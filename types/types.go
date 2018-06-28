@@ -34,6 +34,9 @@ const (
 
 var TypeMonitorChan = make(chan int, 200)
 
-func test() string {
-	return "123"
-}
+var ExitReadChan = make(chan int)
+var ExitProcessChan = make(chan int)
+var ExitSaveChan = make(chan int)
+var ExitChan = make(chan int)
+
+var MonitorLogPath string

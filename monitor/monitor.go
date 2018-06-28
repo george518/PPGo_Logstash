@@ -11,9 +11,8 @@ import (
 	"encoding/json"
 	"github.com/george518/PPGo_Logstash/process"
 	. "github.com/george518/PPGo_Logstash/types"
-	"io"
 	"log"
-	"net/http"
+	"os"
 	"time"
 )
 
@@ -25,43 +24,72 @@ type Monitor struct {
 }
 
 func (m *Monitor) Start(lp *process.LogProcess) {
-	go func() {
-		for n := range TypeMonitorChan {
-			switch n {
-			case TypeErrNum:
-				m.Data.ErrNum += 1
-			case TypeHandleLine:
-				m.Data.HandleLine += 1
-			}
-		}
-	}()
 
 	ticker := time.NewTicker(time.Second * 5)
+
 	go func() {
 		for {
-			<-ticker.C
-			m.TpsSli = append(m.TpsSli, m.Data.HandleLine)
-			if len(m.TpsSli) > 2 {
-				m.TpsSli = m.TpsSli[1:]
+			select {
+			case n := <-TypeMonitorChan:
+				if n == TypeErrNum {
+					m.Data.ErrNum += 1
+				}
+				if n == TypeHandleLine {
+					m.Data.HandleLine += 1
+				}
+
+			case <-ticker.C:
+				m.TpsSli = append(m.TpsSli, m.Data.HandleLine)
+				if len(m.TpsSli) > 2 {
+					m.TpsSli = m.TpsSli[1:]
+				}
+				m.PrintMonitor(lp)
 			}
 		}
+
 	}()
 
-	http.HandleFunc("/monitor", func(writer http.ResponseWriter, request *http.Request) {
-		m.Data.RunTime = time.Now().Sub(m.StartTime).String()
-		m.Data.ReadChanLen = len(lp.Rc)
-		m.Data.WriteChanLen = len(lp.Wc)
+	//http.HandleFunc("/monitor", func(writer http.ResponseWriter, request *http.Request) {
+	//	m.Data.RunTime = time.Now().Sub(m.StartTime).String()
+	//	m.Data.ReadChanLen = len(lp.Rc)
+	//	m.Data.WriteChanLen = len(lp.Wc)
+	//
+	//	if len(m.TpsSli) >= 2 {
+	//		m.Data.Tps = float64(m.TpsSli[1]-m.TpsSli[0]) / 5
+	//	}
+	//
+	//	ret, err := json.MarshalIndent(m.Data, "", "\t")
+	//	if err != nil {
+	//		log.Println(err)
+	//	}
+	//	io.WriteString(writer, string(ret))
+	//})
+	//
+	//http.ListenAndServe(":"+m.WebPort, nil)
+}
 
-		if len(m.TpsSli) >= 2 {
-			m.Data.Tps = float64(m.TpsSli[1]-m.TpsSli[0]) / 5
-		}
+func (m *Monitor) PrintMonitor(lp *process.LogProcess) {
+	m.Data.RunTime = time.Now().Sub(m.StartTime).String()
+	m.Data.ReadChanLen = len(lp.Rc)
+	m.Data.WriteChanLen = len(lp.Wc)
 
-		ret, err := json.MarshalIndent(m.Data, "", "\t")
-		if err != nil {
-			log.Println(err)
-		}
-		io.WriteString(writer, string(ret))
-	})
+	if len(m.TpsSli) >= 2 {
+		m.Data.Tps = float64(m.TpsSli[1]-m.TpsSli[0]) / 5
+	}
 
-	http.ListenAndServe(":"+m.WebPort, nil)
+	ret, err := json.MarshalIndent(m.Data, "", "\t")
+	if err != nil {
+		log.Println(err)
+	}
+
+	//监控日志记录
+
+	file, err := os.OpenFile(MonitorLogPath, os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		log.Println(" monitor log open error", err)
+	}
+	_, err = file.Write(ret)
+	if err != nil {
+		log.Println(" monitor log write error", err)
+	}
 }
